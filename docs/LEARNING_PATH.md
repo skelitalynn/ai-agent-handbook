@@ -1,6 +1,6 @@
 # AI Agent 学习线路（持续更新中）
 
-> 本文用于界定项目的知识范围并汇总资料入口，不代表正文编写顺序。正文严格按照根目录 `SUMMARY.md` 从第一章开始逐章完成。项目默认读者已有 AI Agent 基础，基础主题用于系统复习和概念校准，而非零基础教学。
+> 本文只用于界定知识范围并汇总资料入口，不承担概念分类和正文顺序。Agent 系统骨架与跨章节依赖见 [AI Agent 全局知识地图](KNOWLEDGE_MAP.md)，正式教材顺序严格遵守根目录 `SUMMARY.md`。项目默认读者有 CS 或后端基础，可以尚未系统学习 LLM 和 Agent；基础章节不讲编程入门，但必须完整建立后续 Agent 工程所需的模型、推理和系统心智模型。
 
 ## 章节范围补充说明
 
@@ -82,11 +82,19 @@ TypeScript 特别适合构建：
 
 - 必要数学
 
-- Transformer
+- Tokenization、Embedding 与语言模型目标
+
+- Transformer、Self-Attention、Causal Mask 与 Decoder-only 架构
+
+- 自回归训练与生成，Prefill、Decode 和 KV Cache
 
 - 神经网络与梯度下降
 
-- 预训练、后训练与推理的概念
+- 预训练、监督微调、偏好对齐与推理的概念
+
+- In-context Learning、Zero-shot、Few-shot 与 Chain-of-Thought
+
+- Reasoning Model 与 Test-time Reasoning 的能力和成本边界
 
 
 

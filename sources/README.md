@@ -2,6 +2,20 @@
 
 统一记录长期使用的官方文档、论文、博客和仓库。
 
+## 模型 API 基础
+
+| 标题 | 来源 | 用途 | 最后核验日期 |
+|---|---|---|---|
+| [Migrate to the Responses API](https://developers.openai.com/api/docs/guides/migrate-to-responses) | OpenAI | Responses API、Items、状态和当前推荐入口 | 2026-07-22 |
+| [Conversation State](https://developers.openai.com/api/docs/guides/conversation-state) | OpenAI | Previous Response、服务端状态、存储和计费 | 2026-07-22 |
+| [Streaming API Responses](https://developers.openai.com/api/docs/guides/streaming-responses) | OpenAI | SSE 和语义化流式事件 | 2026-07-22 |
+| [Model Selection](https://developers.openai.com/api/docs/guides/model-selection) | OpenAI | 质量、延迟和成本驱动的模型选型 | 2026-07-22 |
+| [Create a Message](https://platform.claude.com/docs/en/api/messages/create) | Anthropic | Messages API、Content Block 和无状态多轮 | 2026-07-22 |
+| [Token Counting](https://platform.claude.com/docs/en/build-with-claude/token-counting) | Anthropic | Token 预估、上下文和成本控制 | 2026-07-22 |
+| [Rate Limits](https://platform.claude.com/docs/en/api/rate-limits) | Anthropic | RPM、ITPM、OTPM 和 `retry-after` | 2026-07-22 |
+| [Gemini API Reference](https://ai.google.dev/api) | Google AI for Developers | Interactions、Generate Content、Streaming 和 Live API | 2026-07-22 |
+| [Gemini Models](https://ai.google.dev/gemini-api/docs/models) | Google AI for Developers | Stable、Preview、Latest 和 Experimental 版本语义 | 2026-07-22 |
+
 ## Agent 设计与控制
 
 | 标题 | 来源 | 用途 | 最后核验日期 |
