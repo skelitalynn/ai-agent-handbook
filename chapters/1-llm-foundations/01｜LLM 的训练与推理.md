@@ -6,11 +6,11 @@
 
 ### 背诵提纲
 
-**定义**
+**1. 定义**
 
 大语言模型通常是以 Decoder-only Transformer 为骨干的自回归模型。它根据已有 Token 计算下一个 Token 的条件概率，通过不断把新 Token 追加到前缀中完成文本生成。
 
-**完整计算链**
+**2. 完整计算链**
 
 ```text
 训练：文本 → Token ID → Embedding → Transformer → logits
@@ -20,61 +20,39 @@
            → 选择 Token → Decode → 重复生成直到停止
 ```
 
-**Tokenization**
+**3. 输入表示**
 
-Tokenizer 把文本切分为词表中的 Token 并映射成整数 ID。Token 不一定等于字符或单词；不同模型使用的词表不同，同一段文本的 Token 数、上下文占用和费用也可能不同。
+- **Tokenization**：把文本切分为 Token 并映射成整数 ID；Token 不等于固定的字符或单词。
+- **Embedding**：把离散 Token ID 转换为连续向量。
+- **位置信息**：让模型能够区分 Token 的顺序和相对位置。
 
-**Embedding 与位置信息**
+**4. Transformer**
 
-Token Embedding 是可学习的查表矩阵，用于把离散 Token ID 转换为连续向量；经过多层 Transformer 后得到的是随上下文变化的隐藏表示。位置信息用于区分 Token 的先后顺序，常见实现包括原始位置编码和 RoPE。
+- **Self-Attention**：通过 Query、Key 和 Value 聚合序列中其他位置的信息。
+- **Causal Mask**：禁止当前位置关注未来 Token，使训练条件与自回归推理一致。
+- **MLP**：对每个位置的隐藏表示进行非线性变换。
 
-**Decoder-only Transformer**
+**5. 训练**
 
-Decoder-only Transformer 由多层带因果约束的 Transformer Block 堆叠而成。每个 Block 通常包含归一化、Self-Attention、残差连接和 MLP，最终由 LM Head 将隐藏向量投影为整个词表的 logits。
+- **训练目标**：根据已有 Token 预测下一个 Token，通常使用交叉熵计算 Loss。
+- **参数更新**：训练包含前向计算、反向传播和优化器更新。
+- **训练阶段**：通常包括预训练、监督微调和偏好优化，三者的训练数据与目标不同。
 
-**Self-Attention**
+**6. 推理**
 
-Self-Attention 将输入投影为 Query、Key 和 Value。Query 与 Key 的匹配分数决定当前位置从哪些位置读取信息，Value 提供被加权聚合的内容；Multi-Head Attention 会在多个表示子空间中并行执行这一过程。
+- **Prefill**：并行处理全部输入 Token，并生成初始 KV Cache。
+- **Decode**：每次生成一个 Token，在时间维度上必须串行执行。
+- **KV Cache**：缓存历史 Key 和 Value，避免重复计算前缀，本质上是用显存换速度。
+- **采样**：Temperature、Top-k 和 Top-p 改变 Token 选择分布，不保证答案正确。
 
-**Causal Mask**
+**7. 上下文学习与推理**
 
-Causal Mask 保证第 $t$ 个位置只能关注自己和左侧 Token，不能读取未来答案。它使训练时每个位置的可见信息与推理时“只根据已有前缀预测下一个 Token”的条件保持一致。
+- **In-context Learning**：通过当前 Prompt 中的指令和示例改变输出，不更新模型参数。
+- **Chain-of-Thought**：生成中间推理 Token，增加测试时计算，但不能保证推理正确。
 
-**训练目标**
+**8. 能力边界**
 
-自回归训练把序列错开一位构造输入和标签，并以真实下一个 Token 的交叉熵作为损失。训练阶段执行前向计算、反向传播和优化器更新，会改变 Embedding、Attention、MLP 和输出层等模型参数。
-
-**训练阶段**
-
-Pretraining 从大规模数据中学习通用语言和模式能力；Supervised Fine-Tuning 使用指令—回答示例训练指令遵循；Preference Optimization 根据人类或模型偏好调整输出倾向；Reasoning-focused Training 则进一步训练模型分配中间推理和测试时计算。不同阶段目标不同，不能把它们统称为一次微调。
-
-**Prefill**
-
-Prefill 一次处理全部输入 Token，各输入位置可以并行计算，并产生首个 next-token logits 和初始 KV Cache。它主要受输入长度影响，是首 Token 延迟的重要组成部分。
-
-**Decode**
-
-Decode 每一步生成一个新 Token。后一个 Token 依赖前一步刚生成的结果，因此单条序列在时间维度上必须串行执行，输出越长，Decode 步数和总生成时间通常越多。
-
-**KV Cache**
-
-KV Cache 保存历史 Token 在各层 Attention 中的 Key 和 Value，使后续 Decode 不必重新计算整个前缀。它以显存换取速度，大小会随层数、缓存 Token 数、KV Head 数、Head Dimension 和并发序列数增长；新 Query 仍需读取并关注历史缓存。
-
-**logits 与采样**
-
-logits 是 LM Head 为词表候选 Token 产生的未归一化分数，Softmax 将其转换为概率。Greedy、Temperature、Top-k 和 Top-p 决定如何选择 Token，只改变生成分布，不会补充模型缺少的知识，也不会自动验证答案。
-
-**In-context Learning**
-
-Zero-shot、One-shot 和 Few-shot 都通过改变当前输入 Context 来影响模型行为，不执行反向传播，也不更新参数。模型在一个会话中使用了示例，不代表它已经永久学会该任务。
-
-**Chain-of-Thought 与 Reasoning Model**
-
-Chain-of-Thought 让生成过程包含中间推理 Token，使后续步骤可以读取前面的中间结果；Reasoning Model 通常还经过针对推理行为的训练，并可能使用更多测试时计算。中间推理仍可能出错，不能代替工具结果、代码测试、来源证据或业务验证器。
-
-**能力边界**
-
-LLM 本质上仍是条件概率生成器。参数知识不是可查询数据库，Context Window 不是长期记忆，偏好对齐不是权限控制，低 Temperature 也不等于事实正确；Agent Runtime 仍需负责外部知识、状态、验证、权限和副作用控制。
+参数知识不是数据库，Context Window 不是长期记忆，偏好对齐不是权限控制，低随机性也不等于事实正确。
 
 ### 高频对比
 
