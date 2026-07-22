@@ -2,6 +2,28 @@
 
 > 本文用于界定项目的知识范围并汇总资料入口，不代表正文编写顺序。正文严格按照根目录 `SUMMARY.md` 从第一章开始逐章完成。项目默认读者已有 AI Agent 基础，基础主题用于系统复习和概念校准，而非零基础教学。
 
+## 章节范围补充说明
+
+除下文已有内容外，正式知识库必须覆盖以下容易遗漏的子主题：
+
+| 子主题 | 正文归属 |
+|---|---|
+| Structured Output、JSON Schema 与输出验证 | Prompt 与模型 API |
+| 模型选择、模型路由与 Reasoning 参数 | LLM 与模型 API |
+| Tool Discovery、动态加载与 Tool Search | Tool Engineering |
+| 文件、Artifact 与 Workspace 管理 | Context Engineering、Runtime 与 Harness |
+| Context Compaction 与跨窗口续作 | Context Engineering |
+| 数据摄取、切分、索引更新、删除与权限过滤 | Retrieval、RAG 与 Agentic Search |
+| Sandbox、容器、网络和文件系统隔离 | Runtime 与 Harness、Agent Security |
+| Identity、OAuth、RBAC 与多租户隔离 | Agent Security、MCP |
+| Durable Execution、后台任务、队列与恢复 | Workflow 与 Orchestration、Agent Reliability Engineering |
+| Prompt、Tool 与 Model 版本管理 | Agent Evals、生产基础设施与部署 |
+| Agent 数据集与回归测试集管理 | Agent Evals |
+| Cache、模型路由、延迟和成本预算 | 生产基础设施与部署 |
+| Computer Use、Browser Use 与 Code Execution | Tool Engineering、Agent 应用架构模式 |
+| Agent 生命周期、Hooks 与事件模型 | Runtime 与 Harness |
+| 隐私、数据保留和审计 | Agent Security |
+
 # 编程语言
 
 ## 1\.Python\-最快上手
@@ -209,6 +231,30 @@ raise MaxStepsExceeded()
 - [Python SDK](https://github.com/anthropics/claude-agent-sdk-python)
 
 Claude Agent SDK 提供与 Claude Code 相似的 Agent Loop、文件读取、命令执行、代码搜索、Hooks、Subagents、MCP、权限和 Session 能力。
+
+# Agent Planning、Reasoning 与决策控制
+
+这一章讨论 Agent 如何选择下一步行动，以及工程系统如何约束这种决策。重点是可观察、可控制和可评测的执行策略，不要求模型暴露隐藏思维链。
+
+必须覆盖：
+
+- ReAct：Reason、Act、Observe 循环
+- Task Decomposition：任务分解
+- Plan-and-Execute：先规划再执行
+- Routing：按任务类型选择模型、工具或流程
+- Reflection、Self-Critique 与 Evaluator-Optimizer
+- 动态重规划与失败后的计划修正
+- 模型决策与确定性代码控制的边界
+- 最大步数、停止条件、提前终止和死循环检测
+- 不确定性表达、澄清问题与请求人工介入
+- Reasoning 参数、效果、延迟、Token 和成本权衡
+- 不输出或依赖隐藏 Chain-of-Thought 的设计原则
+
+推荐资料：
+
+- [Anthropic：Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents)：核对 Workflow 与 Agent 的边界、Routing、Parallelization、Orchestrator-Workers、Evaluator-Optimizer 和 Agent Loop。最后核验日期：2026-07-22。
+- [Anthropic：Trustworthy Agents in Practice](https://www.anthropic.com/research/trustworthy-agents)：核对计划、行动、观察、调整以及需要人工输入时的控制边界。最后核验日期：2026-07-22。
+- [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629)：核对 ReAct 原始方法。最后核验日期：2026-07-22。
 
 # 3\.Agent Framework
 
@@ -482,6 +528,26 @@ MCP Server
 
 Model Context Protocol：[https://modelcontextprotocol\.io/](https://modelcontextprotocol.io/)
 
+必须覆盖：
+
+- Host、Client 与 Server 的职责边界
+- 初始化、能力协商和协议版本
+- Resources、Prompts 与 Tools
+- Sampling 与 Elicitation
+- JSON-RPC 消息、传输方式和生命周期
+- Progress、Cancellation、Logging 与错误处理
+- OAuth、用户授权、权限边界和 Token 管理
+- 本地 Server 与远程 Server 的安全差异
+- MCP 与普通函数调用、REST API、Skills、A2A 的区别
+- 实验扩展与稳定规范的边界；实验性 Tasks 只作版本化说明，不写成稳定能力
+
+补充官方资料：
+
+- [MCP Specification](https://modelcontextprotocol.io/specification/)：核对协议架构、核心原语和稳定规范。最后核验日期：2026-07-22。
+- [MCP Elicitation](https://modelcontextprotocol.io/specification/2025-06-18/client/elicitation)：核对 Server 请求用户补充结构化信息的交互流程。最后核验日期：2026-07-22。
+- [MCP Authorization](https://modelcontextprotocol.io/specification/2025-03-26/basic/authorization)：核对远程 MCP 的授权流程和安全要求。最后核验日期：2026-07-22。
+- [MCP Tasks](https://modelcontextprotocol.io/extensions/tasks/overview)：仅用于跟踪异步长任务扩展；当前按实验扩展处理。最后核验日期：2026-07-22。
+
 
 
 # 7\.Skills 
@@ -729,6 +795,28 @@ Agent 读取不可信网页或 README
 
 - [Anthropic：How We Contain Claude](https://www.anthropic.com/engineering/how-we-contain-claude)
 
+# Workflow 与 Orchestration
+
+Workflow 描述可预先定义的执行路径，Orchestration 负责按状态、依赖和事件调度这些步骤。它们不等于 Multi-Agent：一个 Workflow 可以只调用一个模型，一个 Agent 也可以在没有复杂工作流框架的情况下运行。
+
+必须覆盖：
+
+- Workflow 与 Agent 的边界
+- Sequential、Parallel、Routing 和 Conditional Workflow
+- State、Node、Edge 与事件
+- Orchestrator-Workers 和 Evaluator-Optimizer
+- DAG、状态机与事件驱动编排
+- Checkpoint、Pause、Resume 与 Durable Execution
+- Human-in-the-loop 中断点
+- 并发、超时、取消、重试和补偿
+- 确定性代码路径与模型动态决策的组合
+- 何时使用普通代码、任务队列或 Agent Workflow 框架
+
+推荐资料：
+
+- [Anthropic：Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents)：核对 Workflow 与 Agent 的定义及常见组合模式。最后核验日期：2026-07-22。
+- [LangGraph Overview](https://docs.langchain.com/oss/python/langgraph/overview)：核对状态图、持久执行、流式处理和 Human-in-the-loop 等框架抽象。最后核验日期：2026-07-22。
+
 # 11\.Multi\-Agent
 
 不要太早学习 Multi\-Agent。大部分学生项目并不需要多个 Agent。很多所谓 Multi\-Agent，只是把同一个模型换了几个角色名，多调用了几次 API。
@@ -830,6 +918,101 @@ Anthropic 的研究系统使用主 Agent 规划任务，并由多个子 Agent �
 - [Claude Code Subagents](https://docs.anthropic.com/en/docs/claude-code/sub-agents)
 
 
+
+# Agent 间通信与 A2A
+
+Multi-Agent 描述系统架构和协作方式；A2A 描述独立 Agent 系统之间如何发现能力、交换消息和管理任务。A2A 不替代 MCP：前者面向 Agent 间协作，后者主要连接 Agent 应用与工具、资源和上下文。
+
+必须覆盖：
+
+- Agent Discovery 与 Agent Card
+- Client Agent 与 Remote Agent
+- Message、Part、Artifact 与 Task
+- Task 生命周期和状态转换
+- Streaming、Push Notification 与异步长任务
+- 能力、输入输出模态与认证声明
+- Delegation、Handoff 和远程协作
+- Agent 身份、授权、信任边界和审计
+- A2A 与 MCP、普通 HTTP API、消息队列的区别
+- 协议版本、兼容性和失败处理
+
+推荐资料：
+
+- [A2A Protocol Specification 0.3.0](https://a2a-protocol.org/v0.3.0/specification/)：核对协议参与者、消息、任务、Artifact、传输和异步交互模型。最后核验日期：2026-07-22。
+- [A2A Protocol](https://a2a-protocol.org/latest/)：核对协议定位、互操作目标和最新文档入口。最后核验日期：2026-07-22。
+
+# Human-Agent Interaction
+
+这一章讨论人在 Agent 生命周期中如何提供意图、控制权限、查看进度、处理中断并纠正结果。它与 Security、Workflow 和协议都有交集，但关注对象是人和 Agent 之间的交互闭环。
+
+必须覆盖：
+
+- 澄清问题、补充上下文和 Elicitation
+- Human-in-the-loop
+- Tool Approval 与按风险分级的确认策略
+- Interrupt、Cancel、Pause 与 Resume
+- Checkpoint 后跨进程、跨会话恢复
+- 进度反馈、Streaming 和中间产物展示
+- 用户纠正、反馈和重新规划
+- 拒绝、失败和不确定性的呈现
+- 自动化程度、可撤销性和人工控制边界
+- Approval Fatigue 与过度确认
+- 人类、Agent 和外部系统之间的责任边界
+
+推荐资料：
+
+- [OpenAI Agents SDK：Human-in-the-loop](https://openai.github.io/openai-agents-python/human_in_the_loop/)：核对审批、中断、状态序列化和恢复流程。最后核验日期：2026-07-22。
+- [Anthropic：Trustworthy Agents in Practice](https://www.anthropic.com/research/trustworthy-agents)：核对人类控制、透明度、隐私和用户预期。最后核验日期：2026-07-22。
+- [MCP Elicitation](https://modelcontextprotocol.io/specification/2025-06-18/client/elicitation)：核对协议层请求用户补充信息以及接受、拒绝和取消语义。最后核验日期：2026-07-22。
+
+# Multimodal 与 Realtime Agents
+
+多模态与实时 Agent 不只是替换输入格式。它们还需要处理长连接、事件流、音频播放状态、用户打断、轮次检测和更严格的端到端延迟预算。
+
+必须覆盖：
+
+- 文本、图片、音频、视频和文件输入
+- 多模态消息、工具结果和 Artifact
+- Streaming Event 与增量输出
+- Realtime Session 生命周期
+- WebSocket、WebRTC 与 SIP 的适用边界
+- Voice Activity Detection 与 Turn Detection
+- Barge-in、用户打断和播放进度同步
+- 实时工具调用、审批和 Handoff
+- 多模态上下文预算和历史管理
+- 首包延迟、首音频延迟与端到端延迟
+- 断线重连、状态恢复和降级到非实时模式
+
+推荐资料：
+
+- [OpenAI Agents SDK：Realtime Agents Guide](https://openai.github.io/openai-agents-python/realtime/guide/)：核对实时 Session、事件、历史、打断、工具、审批和 Handoff。最后核验日期：2026-07-22。
+- [OpenAI Agents SDK：Realtime Transport](https://openai.github.io/openai-agents-python/realtime/transport/)：核对 WebSocket、SIP 和浏览器 WebRTC 的边界。最后核验日期：2026-07-22。
+- [OpenAI Agents SDK：Voice Pipeline](https://openai.github.io/openai-agents-python/voice/pipeline/)：核对语音输入、活动检测、Agent Workflow 和语音输出流水线。最后核验日期：2026-07-22。
+
+# Agent Reliability Engineering
+
+可靠性工程关注 Agent 在模型、工具、网络、状态或人工审批发生异常时，能否安全停止、恢复或降级。它独立于部署：部署解决系统在哪里运行，可靠性解决运行失败时系统如何表现。
+
+必须覆盖：
+
+- 模型错误、工具错误、协议错误、状态错误和业务失败的分类
+- Timeout、Retry、Exponential Backoff 与 Retry Budget
+- 幂等性、副作用分类和重复执行防护
+- Cancellation、最大步数、死循环和提前终止
+- Checkpoint、持久状态与失败恢复
+- 长时间任务、后台任务、队列和断线重连
+- Fallback Model、Fallback Tool 与 Graceful Degradation
+- Circuit Breaker、隔离和限流
+- 部分成功、补偿操作和人工接管
+- SLA、SLO、成功率、延迟和成本指标
+- 故障注入、恢复测试和回归测试
+
+推荐资料：
+
+- [Anthropic：Effective Harnesses for Long-Running Agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)：核对跨上下文窗口、跨 Session 的持续进度和交接 Artifact。最后核验日期：2026-07-22。
+- [OpenAI Agents SDK：Streaming](https://openai.github.io/openai-agents-python/streaming/)：核对流式运行的完成语义、中断、取消和恢复。最后核验日期：2026-07-22。
+- [A2A Protocol Specification 0.3.0](https://a2a-protocol.org/v0.3.0/specification/)：核对 Task 生命周期、Streaming、Push Notification 和异步长任务。最后核验日期：2026-07-22。
+- [OpenAI：The Next Evolution of the Agents SDK](https://openai.com/index/the-next-evolution-of-the-agents-sdk/)：核对长时间任务中 Harness、Sandbox 与计算环境分离的工程方向。最后核验日期：2026-07-22。
 
 # 12\.生产工程化
 
